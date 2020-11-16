@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf-8">
+	<title>RGB Grabber</title>
+</head>
+<body>
+	<h1>RGB Grabber</h1>
+	<p>Upload an image and get a list of RGB values</p>
+	<input type="file" accept=".png,.jpg" id="input">
+	<img id="myImage" style="border:1px" />
+	<div>
+		<p>RGB Values:</p>
+		<textarea id="rgb-out" readonly style="width: 25em; height: 30em"></textarea>
+	</div>
+	<script type="text/javascript">
+		let img_elem = document.getElementById("myImage");
+		const inputElement = document.getElementById("input");
+		inputElement.addEventListener("change", handleFiles, false);
+
+		function rgbToHex(r, g, b) {
+			// From https://stackoverflow.com/a/5624139
+  			return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+		}
+
+
+		function handleFiles() {
+		  const img_file = this.files[0];
+		  const reader = new FileReader();
+		  reader.onload = (e) =>  {
+		  	img_elem.onload = () => {
+		  		console.log("creating canvas")
+		  		let canvas = document.createElement('canvas');
+				let context = canvas.getContext('2d');
+				canvas.width = img_elem.width;
+				canvas.height = img_elem.height;
+				context.drawImage(img_elem, 0, 0 );
+				let img = context.getImageData(0, 0, img_elem.width, img_elem.height);
+				console.log(img.data);
+				output = [];
+				for (let i = 0; i < img.data.length; i += 4) {
+					if (img.data[i+3] == 0) {
+						continue
+					}
+					let r = img.data[i];
+					let g = img.data[i+1];
+					let b = img.data[i+2];
+					let rgb = rgbToHex(r, g, b) + ` - rgb(${r}, ${g}, ${b})`;
+					if (output.indexOf(rgb) === -1) {
+						output.push(rgb);
+					}
+				}
+				console.log("writing output")
+				let text_out = document.getElementById("rgb-out");
+				let out = ""
+				for (let rgb of output) {
+					out += rgb + "\n";
+				}
+				text_out.value = out;
+		  	};
+		  	img_elem.src = e.target.result;
+		  };
+		  reader.readAsDataURL(img_file);
+		}
+	</script>
+</body>
